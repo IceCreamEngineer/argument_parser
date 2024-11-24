@@ -10,16 +10,17 @@ class ArgumentParser:
         self._arguments_found = set()
         self._current_argument = None
         self._parse_schema(schema)
+        if schema.get_elements() and not arguments:
+            raise ArgumentError(ArgumentErrorCode.MISSING_REQUIRED_ARGUMENT)
         self._parse_arguments(arguments)
 
     def _parse_schema(self, schema):
-        for element in schema.split(','):
-            if len(element) > 0:
-                self._parse_schema_element(element.strip())
+        for element in schema.get_elements():
+            self._parse_schema_element(element)
 
     def _parse_schema_element(self, element):
-        element_id = element[0]
-        element_tail = element[1:]
+        element_id = element.name
+        element_tail = element.type_notation
         self._validate_schema_element_id(element_id)
         self._set_marshaler(element_id, element_tail)
 

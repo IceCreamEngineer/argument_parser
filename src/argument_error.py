@@ -32,3 +32,4 @@ class ArgumentErrorCode(Enum):
     INVALID_ARGUMENT_NAME = auto()
     INVALID_ARGUMENT_FORMAT = auto()
     MISSING_STRING = auto()
+    MISSING_REQUIRED_ARGUMENT = auto()
