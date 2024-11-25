@@ -20,6 +20,8 @@ class ArgumentError(RuntimeError):
             return f"Argument -{self._error_argument_id} unexpected."
         elif self._error_code == ArgumentErrorCode.MISSING_STRING:
             return f"Could not find string parameter for -{self._error_argument_id}"
+        elif self._error_code == ArgumentErrorCode.MISSING_REQUIRED_ARGUMENT:
+            return f"Missing required argument: {self._error_argument_id}"
         elif self._error_code == ArgumentErrorCode.INVALID_ARGUMENT_NAME:
             return f"'{self._error_argument_id}' is not a valid argument name."
         elif self._error_code == ArgumentErrorCode.INVALID_ARGUMENT_FORMAT:

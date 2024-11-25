@@ -12,6 +12,10 @@ class MyTestCase(unittest.TestCase):
         e = ArgumentError(ArgumentErrorCode.MISSING_STRING, 'x')
         self.assertEqual("Could not find string parameter for -x", e.error_message())
 
+    def test_missing_required_argument_message(self):
+        e = ArgumentError(ArgumentErrorCode.MISSING_REQUIRED_ARGUMENT, 'x')
+        self.assertEqual("Missing required argument: x", e.error_message())
+
     def test_invalid_argument_name(self):
         e = ArgumentError(ArgumentErrorCode.INVALID_ARGUMENT_NAME, '#')
         self.assertEqual("'#' is not a valid argument name.", e.error_message())
