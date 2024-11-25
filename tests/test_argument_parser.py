@@ -49,12 +49,33 @@ class ArgumentParserTests(unittest.TestCase):
         except ArgumentError as e:
             self.assert_correct_argument_error(e, ArgumentErrorCode.MISSING_STRING, 'x')
 
-    def test_missing_required_argument(self):
+    def test_missing_required_argument_for_no_arguments(self):
         try:
             ArgumentParser(ArgumentSchema([ArgumentSchemaElement('x', '*')]), [])
             self.fail()
         except ArgumentError as e:
             self.assert_correct_argument_error(e, ArgumentErrorCode.MISSING_REQUIRED_ARGUMENT)
+
+    def test_missing_required_argument_for_some_argument(self):
+        try:
+            elements = [ArgumentSchemaElement('x', '*'), ArgumentSchemaElement('y', '*')]
+            ArgumentParser(ArgumentSchema(elements), ['-x', 'alpha'])
+            self.fail()
+        except ArgumentError as e:
+            self.assert_correct_argument_error(e, ArgumentErrorCode.MISSING_REQUIRED_ARGUMENT, 'y')
+
+    def test_missing_optional_argument_for_no_arguments(self):
+        try:
+            ArgumentParser(ArgumentSchema([ArgumentSchemaElement('x', '*', is_required=False)]), [])
+        except ArgumentError as e:
+            self.fail(f"Unexpected exception raised: {e}")
+
+    def test_missing_optional_argument_for_some_argument(self):
+        try:
+            elements = [ArgumentSchemaElement('x', '*'), ArgumentSchemaElement('y', '*', is_required=False)]
+            ArgumentParser(ArgumentSchema(elements), ['-x', 'alpha'])
+        except ArgumentError as e:
+            self.fail(f"Unexpected exception raised: {e}")
 
     def test_string_array(self):
         argument_parser = ArgumentParser(ArgumentSchema([(ArgumentSchemaElement('x', '[*]'))]), ['-x', 'alpha'])

@@ -10,9 +10,15 @@ class ArgumentParser:
         self._arguments_found = set()
         self._current_argument = None
         self._parse_schema(schema)
-        if schema.get_elements() and not arguments:
-            raise ArgumentError(ArgumentErrorCode.MISSING_REQUIRED_ARGUMENT)
+        self.check_for_required(arguments, schema)
         self._parse_arguments(arguments)
+
+    def check_for_required(self, arguments, schema):
+        if not schema.get_elements():
+            return
+        for element in schema.get_elements():
+            if element.is_required and element.name not in [argument[1:] for argument in arguments]:
+                raise ArgumentError(ArgumentErrorCode.MISSING_REQUIRED_ARGUMENT, element.name)
 
     def _parse_schema(self, schema):
         for element in schema.get_elements():
