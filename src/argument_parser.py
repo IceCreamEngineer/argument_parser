@@ -9,23 +9,19 @@ class ArgumentParser:
         self._marshalers = {}
         self._arguments_found = set()
         self._current_argument = None
-        self._parse_schema(schema)
-        self.check_for_required(arguments, schema)
-        self._parse_arguments(arguments)
+        self._parse(schema, arguments)
 
-    def check_for_required(self, arguments, schema):
-        if not schema.get_elements():
-            return
-        for element in schema.get_elements():
-            if element.is_required and element.name not in [argument[1:] for argument in arguments]:
-                raise ArgumentError(ArgumentErrorCode.MISSING_REQUIRED_ARGUMENT, element.name)
+    def _parse(self, schema, arguments):
+        self._parse_schema(schema)
+        self._parse_arguments(arguments)
+        self._check_for_required_arguments_from(schema)
 
     def _parse_schema(self, schema):
         for element in schema.get_elements():
             self._parse_schema_element(element)
 
     def _parse_schema_element(self, element):
-        element_id = element.name
+        element_id = (element.name, element.long_name)
         element_tail = element.type_notation
         self._validate_schema_element_id(element_id)
         self._set_marshaler(element_id, element_tail)
@@ -38,20 +34,22 @@ class ArgumentParser:
         elif element_tail == '[*]':
             self._marshalers[element_id] = StringArrayArgumentMarshaler()
         else:
-            raise ArgumentError(ArgumentErrorCode.INVALID_ARGUMENT_FORMAT, element_id)
+            raise ArgumentError(ArgumentErrorCode.INVALID_ARGUMENT_FORMAT, element_id[0])
 
     @staticmethod
     def _validate_schema_element_id(element_id):
-        if not element_id.isalpha():
-            raise ArgumentError(ArgumentErrorCode.INVALID_ARGUMENT_NAME, element_id)
+        if not element_id[0].isalpha():
+            raise ArgumentError(ArgumentErrorCode.INVALID_ARGUMENT_NAME, element_id[0])
 
     def _parse_arguments(self, arguments):
         self._current_argument = iter(arguments)
         while True:
             try:
                 argument = next(self._current_argument)
-                if argument.startswith('-'):
-                    self._parse_argument_characters(argument[1:])
+                if argument.startswith('--'):
+                    self._parse_argument_character(argument[2:])
+                elif argument.startswith('-'):
+                    self._parse_argument_character(argument[1:])
                 else:
                     argument_index = arguments.index(argument)
                     arguments.pop(argument_index)
@@ -65,14 +63,20 @@ class ArgumentParser:
             self._parse_argument_character(argument_characters[i])
 
     def _parse_argument_character(self, argument_character):
-        if argument_character not in self._marshalers:
+        matching_element_names = [element_names for element_names in self._marshalers if argument_character in element_names]
+        if not matching_element_names:
             raise ArgumentError(ArgumentErrorCode.UNEXPECTED_ARGUMENT, argument_character)
         self._arguments_found.add(argument_character)
         try:
-            self._marshalers[argument_character].set(self._current_argument)
+            self._marshalers[matching_element_names[0]].set(self._current_argument)
         except ArgumentError as e:
             e.set_error_argument_id(argument_character)
             raise e
+
+    def _check_for_required_arguments_from(self, schema):
+        for element in schema.get_elements():
+            if element.is_required and not (self.has(element.name) or self.has(element.long_name)):
+                raise ArgumentError(ArgumentErrorCode.MISSING_REQUIRED_ARGUMENT, element.name)
 
     def has(self, argument):
         return argument in self._arguments_found

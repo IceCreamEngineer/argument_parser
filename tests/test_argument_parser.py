@@ -42,6 +42,12 @@ class ArgumentParserTests(unittest.TestCase):
         argument_parser = ArgumentParser(ArgumentSchema([(ArgumentSchemaElement('x', '*'))]), ['-x', 'param'])
         self.assertTrue(argument_parser.has("x"))
 
+    def test_long_string_name(self):
+        argument_parser = ArgumentParser(
+            ArgumentSchema([ArgumentSchemaElement('x', '*', long_name='excelsior')]), ['--excelsior', 'alpha'])
+        self.assertTrue(argument_parser.has('excelsior'))
+        self.assertEqual('alpha', argument_parser.get_string(('x', 'excelsior')))
+
     def test_missing_string_argument(self):
         try:
             ArgumentParser(ArgumentSchema([(ArgumentSchemaElement('x', '*'))]), ['-x'])
@@ -80,7 +86,7 @@ class ArgumentParserTests(unittest.TestCase):
     def test_string_array(self):
         argument_parser = ArgumentParser(ArgumentSchema([(ArgumentSchemaElement('x', '[*]'))]), ['-x', 'alpha'])
         self.assertTrue(argument_parser.has('x'))
-        result = argument_parser.get_string_array('x')
+        result = argument_parser.get_string_array(('x', ''))
         self.assertEqual(1, len(result))
         self.assertEqual('alpha', result[0])
 
@@ -94,7 +100,7 @@ class ArgumentParserTests(unittest.TestCase):
     def test_many_string_elements(self):
         argument_parser = ArgumentParser(ArgumentSchema([(ArgumentSchemaElement('x', '[*]'))]), ['-x', 'alpha', '-x', 'beta', '-x', 'gamma'])
         self.assertTrue(argument_parser.has('x'))
-        result = argument_parser.get_string_array('x')
+        result = argument_parser.get_string_array(('x', ''))
         self.assertEqual(3, len(result))
         self.assertEqual('alpha', result[0])
         self.assertEqual('beta', result[1])
@@ -102,11 +108,11 @@ class ArgumentParserTests(unittest.TestCase):
 
     def test_extra_arguments(self):
         argument_parser = ArgumentParser(ArgumentSchema([(ArgumentSchemaElement('y', '*'))]), ['-y', 'alpha', 'beta'])
-        self.assertEqual('alpha', argument_parser.get_string('y'))
+        self.assertEqual('alpha', argument_parser.get_string(('y', '')))
         self.assertEqual(0, argument_parser.next_argument())
 
     def test_extra_arguments_that_look_like_flags(self):
-        elements = [ArgumentSchemaElement('x', ''), ArgumentSchemaElement('y', '')]
+        elements = [ArgumentSchemaElement('x', ''), ArgumentSchemaElement('y', '', is_required=False)]
         argument_parser = ArgumentParser(ArgumentSchema(elements), ['-x', 'alpha', '-y', 'alpha'])
         self.assertTrue(argument_parser.has('x'))
         self.assertFalse(argument_parser.has('y'))
@@ -117,9 +123,9 @@ class ArgumentParserTests(unittest.TestCase):
                     ArgumentSchemaElement('c', '[*]')]
         argument_parser = ArgumentParser(ArgumentSchema(elements), ['-n', 'mycontainer', '-s', '/the/path', '-c',
              '/path/1', '-c', '/path/2'])
-        self.assertEqual('mycontainer', argument_parser.get_string('n'))
-        self.assertEqual('/the/path', argument_parser.get_string('s'))
-        self.assertEqual(['/path/1', '/path/2'], argument_parser.get_string_array('c'))
+        self.assertEqual('mycontainer', argument_parser.get_string(('n', '')))
+        self.assertEqual('/the/path', argument_parser.get_string(('s', '')))
+        self.assertEqual(['/path/1', '/path/2'], argument_parser.get_string_array(('c', '')))
 
     def assert_correct_argument_error(self, e, expected_error_code, expected_argument_id=None):
         self.assertEqual(expected_error_code, e.get_error_code())
