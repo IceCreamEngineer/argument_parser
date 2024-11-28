@@ -31,6 +31,13 @@ class ArgumentParserTests(unittest.TestCase):
         except ArgumentError as e:
             self.assert_correct_argument_error(e, ArgumentErrorCode.INVALID_ARGUMENT_NAME, '*')
 
+    def test_non_letter_long_name(self):
+        try:
+            ArgumentParser(ArgumentSchema([(ArgumentSchemaElement('x', '', long_name='**'))]), [])
+            self.fail()
+        except ArgumentError as e:
+            self.assert_correct_argument_error(e, ArgumentErrorCode.INVALID_ARGUMENT_NAME, '**')
+
     def test_invalid_argument_format(self):
         try:
             ArgumentParser(ArgumentSchema([(ArgumentSchemaElement('f', '~'))]), [])

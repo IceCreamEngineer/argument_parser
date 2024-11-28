@@ -21,48 +21,70 @@ class ArgumentParser:
             self._parse_schema_element(element)
 
     def _parse_schema_element(self, element):
-        element_id = (element.name, element.long_name)
-        element_tail = element.type_notation
         self._validate(element)
-        self._set_marshaler_for(element_id, element_tail)
+        self._set_marshaler_for(element)
 
     @staticmethod
     def _validate(element):
-        if not element.name.isalpha():
-            raise ArgumentError(ArgumentErrorCode.INVALID_ARGUMENT_NAME, element.name)
+        long_name_is_alpha = element.long_name.isalpha() or not element.long_name
+        if not element.name.isalpha() or not long_name_is_alpha:
+            raise ArgumentError(ArgumentErrorCode.INVALID_ARGUMENT_NAME,
+                element.name if long_name_is_alpha else element.long_name)
 
-    def _set_marshaler_for(self, element_id, element_tail):
-        if len(element_tail) == 0:
-            self._marshalers[element_id] = NoArgumentMarshaler()
-        elif element_tail == '*':
-            self._marshalers[element_id] = StringArgumentMarshaler()
-        elif element_tail == '[*]':
-            self._marshalers[element_id] = StringArrayArgumentMarshaler()
-        else:
-            raise ArgumentError(ArgumentErrorCode.INVALID_ARGUMENT_FORMAT, element_id[0])
+    def _set_marshaler_for(self, element):
+        marshaler = self._make_marshaler_from(element)
+        self._marshalers[(element.name, element.long_name)] = marshaler
+
+    def _make_marshaler_from(self, element):
+        if len(element.type_notation) == 0:
+            return NoArgumentMarshaler()
+        elif element.type_notation == '*':
+            return StringArgumentMarshaler()
+        elif element.type_notation == '[*]':
+            return StringArrayArgumentMarshaler()
+        raise ArgumentError(ArgumentErrorCode.INVALID_ARGUMENT_FORMAT, element.name)
 
     def _parse_arguments(self, arguments):
         self._current_argument = iter(arguments)
         while True:
-            try:
-                argument = next(self._current_argument)
-                if argument.startswith('--'):
-                    self._parse_argument_character(argument[2:])
-                elif argument.startswith('-'):
-                    self._parse_argument_character(argument[1:])
-                else:
-                    argument_index = arguments.index(argument)
-                    arguments.pop(argument_index)
-                    self._current_argument = iter(arguments)
-                    break
-            except StopIteration:
+            if not self._iterating_through(arguments):
                 break
 
+    def _iterating_through(self, arguments):
+        try:
+            return self._iterate_through(arguments)
+        except StopIteration:
+            return False
+
+    def _iterate_through(self, arguments):
+        argument = next(self._current_argument)
+        is_argument_name = argument.startswith(('--', '-'))
+        self._check_to_parse(argument, arguments, is_argument_name)
+        return is_argument_name
+
+    def _check_to_parse(self, argument, arguments, is_argument_name):
+        if is_argument_name:
+            self._parse_argument_character(argument[2:] if argument.startswith('--') else argument[1:])
+        else:
+            self._backup_to_previous(argument, arguments)
+
     def _parse_argument_character(self, argument_character):
+        matching_element_names = self._get_matching_element_names_for(argument_character)
+        self._arguments_found.add(argument_character)
+        self._try_to_marshal(argument_character, matching_element_names)
+
+    def _backup_to_previous(self, argument, arguments):
+        argument_index = arguments.index(argument)
+        arguments.pop(argument_index)
+        self._current_argument = iter(arguments)
+
+    def _get_matching_element_names_for(self, argument_character):
         matching_element_names = [element_names for element_names in self._marshalers if argument_character in element_names]
         if not matching_element_names:
             raise ArgumentError(ArgumentErrorCode.UNEXPECTED_ARGUMENT, argument_character)
-        self._arguments_found.add(argument_character)
+        return matching_element_names
+
+    def _try_to_marshal(self, argument_character, matching_element_names):
         try:
             self._marshalers[matching_element_names[0]].set(self._current_argument)
         except ArgumentError as e:
