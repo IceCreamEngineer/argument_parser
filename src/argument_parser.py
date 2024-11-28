@@ -23,10 +23,15 @@ class ArgumentParser:
     def _parse_schema_element(self, element):
         element_id = (element.name, element.long_name)
         element_tail = element.type_notation
-        self._validate_schema_element_id(element_id)
-        self._set_marshaler(element_id, element_tail)
+        self._validate(element)
+        self._set_marshaler_for(element_id, element_tail)
 
-    def _set_marshaler(self, element_id, element_tail):
+    @staticmethod
+    def _validate(element):
+        if not element.name.isalpha():
+            raise ArgumentError(ArgumentErrorCode.INVALID_ARGUMENT_NAME, element.name)
+
+    def _set_marshaler_for(self, element_id, element_tail):
         if len(element_tail) == 0:
             self._marshalers[element_id] = NoArgumentMarshaler()
         elif element_tail == '*':
@@ -35,11 +40,6 @@ class ArgumentParser:
             self._marshalers[element_id] = StringArrayArgumentMarshaler()
         else:
             raise ArgumentError(ArgumentErrorCode.INVALID_ARGUMENT_FORMAT, element_id[0])
-
-    @staticmethod
-    def _validate_schema_element_id(element_id):
-        if not element_id[0].isalpha():
-            raise ArgumentError(ArgumentErrorCode.INVALID_ARGUMENT_NAME, element_id[0])
 
     def _parse_arguments(self, arguments):
         self._current_argument = iter(arguments)
@@ -57,10 +57,6 @@ class ArgumentParser:
                     break
             except StopIteration:
                 break
-
-    def _parse_argument_characters(self, argument_characters):
-        for i in range(len(argument_characters)):
-            self._parse_argument_character(argument_characters[i])
 
     def _parse_argument_character(self, argument_character):
         matching_element_names = [element_names for element_names in self._marshalers if argument_character in element_names]
