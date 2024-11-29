@@ -17,7 +17,7 @@ class ArgumentParser:
         self._check_for_required_arguments_from(schema)
 
     def _parse_schema(self, schema):
-        for element in schema.get_elements():
+        for element in schema:
             self._parse_schema_element(element)
 
     def _parse_schema_element(self, element):
@@ -92,7 +92,7 @@ class ArgumentParser:
             raise e
 
     def _check_for_required_arguments_from(self, schema):
-        for element in schema.get_elements():
+        for element in schema:
             if element.is_required and not (self.has(element.name) or self.has(element.long_name)):
                 raise ArgumentError(ArgumentErrorCode.MISSING_REQUIRED_ARGUMENT, element.name)
 
