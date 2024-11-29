@@ -26,10 +26,10 @@ class ArgumentParser:
 
     @staticmethod
     def _validate(element):
-        long_name_is_alpha = element.long_name.isalpha() or not element.long_name
-        if not element.name.isalpha() or not long_name_is_alpha:
+        long_name_is_alphabetic = element.long_name.isalpha() or not element.long_name
+        if not element.name.isalpha() or not long_name_is_alphabetic:
             raise ArgumentError(ArgumentErrorCode.INVALID_ARGUMENT_NAME,
-                element.name if long_name_is_alpha else element.long_name)
+                element.name if long_name_is_alphabetic else element.long_name)
 
     def _set_marshaler_for(self, element):
         marshaler = self._make_marshaler_from(element)
