@@ -12,8 +12,5 @@ class StringArgumentMarshaler(ArgumentMarshaler):
         except StopIteration:
             raise ArgumentError(ArgumentErrorCode.MISSING_STRING)
 
-    @staticmethod
-    def get_value(argument_marshaler):
-        if argument_marshaler and isinstance(argument_marshaler, StringArgumentMarshaler):
-            return argument_marshaler._string_value
-        return ''
+    def get_value_from(self, marshaler):
+        return self._string_value

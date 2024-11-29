@@ -1,15 +1,16 @@
 from src.argument_error import ArgumentError, ArgumentErrorCode
-from src.no_argument_marshaler import NoArgumentMarshaler
-from src.string_argument_marshaler import StringArgumentMarshaler
-from src.string_array_argument_marshaler import StringArrayArgumentMarshaler
 
 
 class ArgumentParser:
-    def __init__(self, schema, arguments):
+    def __init__(self, schema, arguments, argument_marshaler_factory):
+        self._argument_marshaler_factory = argument_marshaler_factory
+        self._initialize_members()
+        self._parse(schema, arguments)
+
+    def _initialize_members(self):
         self._marshalers = {}
         self._arguments_found = set()
         self._current_argument = None
-        self._parse(schema, arguments)
 
     def _parse(self, schema, arguments):
         self._parse_schema(schema)
@@ -36,12 +37,8 @@ class ArgumentParser:
         self._marshalers[(element.name, element.long_name)] = marshaler
 
     def _make_marshaler_from(self, element):
-        if len(element.type_notation) == 0:
-            return NoArgumentMarshaler()
-        elif element.type_notation == '*':
-            return StringArgumentMarshaler()
-        elif element.type_notation == '[*]':
-            return StringArrayArgumentMarshaler()
+        if element.argument_type in self._argument_marshaler_factory.get_argument_types():
+            return self._argument_marshaler_factory.create_from(element.argument_type)
         raise ArgumentError(ArgumentErrorCode.INVALID_ARGUMENT_FORMAT, element.name)
 
     def _parse_arguments(self, arguments):
@@ -102,8 +99,5 @@ class ArgumentParser:
     def next_argument(self):
         return 0 if len(self._arguments_found) == 0 else len(self._arguments_found) - 1
 
-    def get_string(self, argument):
-        return StringArgumentMarshaler.get_value(self._marshalers[argument])
-
-    def get_string_array(self, argument):
-        return StringArrayArgumentMarshaler.get_value(self._marshalers[argument])
+    def get_value_of(self, argument_names):
+        return self._marshalers[argument_names].get_value_from(self._marshalers[argument_names])
