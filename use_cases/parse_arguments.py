@@ -1,26 +1,28 @@
-from src.argument_error import ArgumentError, ArgumentErrorCode
-from src.present_help import NullHelpPresenter
+from entities.argument_error import ArgumentError, ArgumentErrorCode
 
 
-class ArgumentParser:
-    def __init__(self, schema, arguments, argument_marshaler_factory, help_presenter=NullHelpPresenter()):
+class ParseArgumentsUseCase:
+    def __init__(self, schema, arguments, argument_marshaler_factory, present_help_message_use_case):
         self._argument_marshaler_factory = argument_marshaler_factory
-        self._help_presenter = help_presenter
+        self._present_help_message_use_case = present_help_message_use_case
         self._initialize_members()
-        self._parse(schema, arguments)
+        self._try_to_parse(schema, arguments)
 
     def _initialize_members(self):
         self._marshalers = {}
         self._arguments_found = set()
         self._current_argument = None
 
+    def _try_to_parse(self, schema, arguments):
+        try:
+            self._parse(schema, arguments)
+        except PresentHelp:
+            self._present_help_message_use_case.present_help_message(schema)
+            return
+
     def _parse(self, schema, arguments):
         self._parse_schema(schema)
-        try:
-            self._parse_arguments(arguments)
-        except PresentHelp:
-            self._help_presenter.present(schema)
-            return
+        self._parse_arguments(arguments)
         self._check_for_required_arguments_from(schema)
 
     def _parse_schema(self, schema):
@@ -31,12 +33,18 @@ class ArgumentParser:
         self._validate(element)
         self._set_marshaler_for(element)
 
-    @staticmethod
-    def _validate(element):
-        long_name_is_alphabetic = element.long_name.isalpha() or not element.long_name
+    def _validate(self, element):
+        long_name_is_alphabetic = self.is_long_name_alphabetic_for(element)
         if not element.name.isalpha() or not long_name_is_alphabetic:
             raise ArgumentError(ArgumentErrorCode.INVALID_ARGUMENT_NAME,
                 element.name if long_name_is_alphabetic else element.long_name)
+
+    @staticmethod
+    def is_long_name_alphabetic_for(element):
+        long_name = element.long_name
+        if '_' in element.long_name or '-' in element.long_name:
+            long_name = long_name.replace('_', '').replace('-', '')
+        return long_name.isalpha() or not element.long_name
 
     def _set_marshaler_for(self, element):
         marshaler = self._make_marshaler_from(element)

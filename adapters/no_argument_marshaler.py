@@ -1,4 +1,4 @@
-from src.argument_marshaler import ArgumentMarshaler
+from ports.argument_marshaler import ArgumentMarshaler
 
 
 class NoArgumentMarshaler(ArgumentMarshaler):

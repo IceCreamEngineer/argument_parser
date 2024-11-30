@@ -1,6 +1,6 @@
 import unittest
 
-from src.argument_error import ArgumentError, ArgumentErrorCode
+from entities.argument_error import ArgumentError, ArgumentErrorCode
 
 
 class MyTestCase(unittest.TestCase):

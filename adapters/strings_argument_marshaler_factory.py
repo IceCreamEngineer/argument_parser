@@ -1,7 +1,7 @@
-from src.argument_marshaler_factory import ArgumentMarshalerFactory
-from src.no_argument_marshaler import NoArgumentMarshaler
-from src.string_argument_marshaler import StringArgumentMarshaler
-from src.string_array_argument_marshaler import StringArrayArgumentMarshaler
+from ports.argument_marshaler_factory import ArgumentMarshalerFactory
+from adapters.no_argument_marshaler import NoArgumentMarshaler
+from adapters.string_argument_marshaler import StringArgumentMarshaler
+from adapters.string_array_argument_marshaler import StringArrayArgumentMarshaler
 
 
 class StringsArgumentMarshalerFactory(ArgumentMarshalerFactory):

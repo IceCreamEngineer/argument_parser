@@ -1,5 +1,5 @@
-from src.argument_error import *
-from src.argument_marshaler import ArgumentMarshaler
+from entities.argument_error import *
+from ports.argument_marshaler import ArgumentMarshaler
 
 
 class StringArrayArgumentMarshaler(ArgumentMarshaler):
