@@ -1,9 +1,11 @@
 from src.argument_error import ArgumentError, ArgumentErrorCode
+from src.present_help import NullHelpPresenter
 
 
 class ArgumentParser:
-    def __init__(self, schema, arguments, argument_marshaler_factory):
+    def __init__(self, schema, arguments, argument_marshaler_factory, help_presenter=NullHelpPresenter()):
         self._argument_marshaler_factory = argument_marshaler_factory
+        self._help_presenter = help_presenter
         self._initialize_members()
         self._parse(schema, arguments)
 
@@ -14,7 +16,11 @@ class ArgumentParser:
 
     def _parse(self, schema, arguments):
         self._parse_schema(schema)
-        self._parse_arguments(arguments)
+        try:
+            self._parse_arguments(arguments)
+        except PresentHelp:
+            self._help_presenter.present(schema)
+            return
         self._check_for_required_arguments_from(schema)
 
     def _parse_schema(self, schema):
@@ -77,9 +83,14 @@ class ArgumentParser:
 
     def _get_matching_element_names_for(self, argument_character):
         matching_element_names = [element_names for element_names in self._marshalers if argument_character in element_names]
+        self._check_for_expected(argument_character, matching_element_names)
+        return matching_element_names
+
+    def _check_for_expected(self, argument_character, matching_element_names):
+        if argument_character == 'h' or argument_character == 'help':
+            raise PresentHelp
         if not matching_element_names:
             raise ArgumentError(ArgumentErrorCode.UNEXPECTED_ARGUMENT, argument_character)
-        return matching_element_names
 
     def _try_to_marshal(self, argument_character, matching_element_names):
         try:
@@ -101,3 +112,7 @@ class ArgumentParser:
 
     def get_value_of(self, argument_names):
         return self._marshalers[argument_names].get_value_from(self._marshalers[argument_names])
+
+
+class PresentHelp(RuntimeWarning):
+    pass

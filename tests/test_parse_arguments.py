@@ -5,11 +5,13 @@ from src.argument_marshaler_factory import NoArgumentMarshalerFactory
 from src.parse_arguments import ArgumentParser
 from src.argument_schema import *
 from tests.templates.argument_parser_test_template import ArgumentParserTestTemplate
+from tests.test_doubles.help_presenters import HelpPresenterSpy
 
 
 class ArgumentParserTests(ArgumentParserTestTemplate):
     def setUp(self):
         self.am_factory = NoArgumentMarshalerFactory()
+        self.presenter = HelpPresenterSpy("client.py", "My client")
 
     def test_no_schema_or_arguments(self):
         args_parser = ArgumentParser([], [], self.am_factory)
@@ -85,6 +87,40 @@ class ArgumentParserTests(ArgumentParserTestTemplate):
         self.assertTrue(argument_parser.has('x'))
         self.assertFalse(argument_parser.has('y'))
         self.assertEqual(0, argument_parser.next_argument())
+
+    def test_present_help(self):
+        ArgumentParser([], ['--help'], self.am_factory, self.presenter)
+        self.assertEqual(""
+            "usage: client.py [-h]\n"
+            "\n"
+            "My client\n"
+            "\n"
+            "optional arguments:\n"
+            "  -h, --help  show this help message and exit\n", self.presenter.get_presented())
+
+    def test_present_help_with_schema(self):
+        ArgumentParser([ArgumentSchemaElement('a', '', description='My arg', is_required=False)],
+            ['-h'], self.am_factory, self.presenter)
+        self.assertEqual(""
+            "usage: client.py [-h]\n"
+            "\n"
+            "My client\n"
+            "\n"
+            "optional arguments:\n"
+            "  -h, --help  show this help message and exit\n"
+            "  -a          My arg\n", self.presenter.get_presented())
+
+    def test_present_help_with_schema_and_long_name(self):
+        ArgumentParser([ArgumentSchemaElement('a', '', long_name='arg', description='My arg', is_required=False)],
+            ['-h'], self.am_factory, self.presenter)
+        self.assertEqual(""
+            "usage: client.py [-h]\n"
+            "\n"
+            "My client\n"
+            "\n"
+            "optional arguments:\n"
+            "  -h, --help  show this help message and exit\n"
+            "  -a, --arg   My arg\n", self.presenter.get_presented())
 
 
 if __name__ == '__main__':
