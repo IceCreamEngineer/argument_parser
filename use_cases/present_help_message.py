@@ -1,7 +1,10 @@
+import textwrap
+
+
 class PresentHelpMessageUseCase:
     def __init__(self, program_filename, description, presenter):
         self._program_filename = program_filename
-        self._description = description
+        self._description = textwrap.fill(description, 72)
         self._presenter = presenter
         self._help_message = ""
 
