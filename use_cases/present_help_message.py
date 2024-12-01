@@ -19,7 +19,7 @@ class PresentHelpMessageUseCase:
         self._add_optional_arguments_from(schema)
 
     def _add_usage_line_with_required(self, schema):
-        self._help_message += f"usage: {self._program_filename} [-h]"
+        self._help_message += textwrap.fill(f"usage: {self._program_filename} [-h]", 72)
         for element in schema:
             if element.is_required:
                 self._help_message += f" -{element.name}{self._add_flag_value_for(element)}"
@@ -70,7 +70,12 @@ class PresentHelpMessageUseCase:
         for element in schema:
             long_name_label = "" if not element.long_name else f", --{element.long_name}"
             args_names = f"  -{element.name}{long_name_label}{self._add_flag_value_for(element)}"
-            self._help_message += f"{args_names}{self._spacer(args_names, max_arg_names_length)}{element.description}\n"
+            self._add_arg_help_message_for(args_names, element, max_arg_names_length)
+
+    def _add_arg_help_message_for(self, args_names, element, max_arg_names_length):
+        self._help_message += textwrap.fill(
+            f"{args_names}{self._spacer(args_names, max_arg_names_length)}{element.description}", 72,
+            subsequent_indent=self._spacer('', max_arg_names_length)) + '\n'
 
     @staticmethod
     def _check_to_default(schema):
