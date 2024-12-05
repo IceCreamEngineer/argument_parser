@@ -10,7 +10,8 @@ from use_cases.present_help_message import PresentHelpMessageUseCase
 
 def main():
     help_message_presenter, presenter = setup_presenters()
-    schema = [ArgumentSchemaElement('a', '*', 'An argument', is_required=True, long_name='argument')]
+    schema = [ArgumentSchemaElement('s', '*', 'A string argument', is_required=True, long_name='string'),
+              ArgumentSchemaElement('a', '[*]', "A string array argument", False, 'string-array')]
     try_to_parse_arguments_for(schema, help_message_presenter, presenter)
 
 
@@ -30,7 +31,9 @@ def try_to_parse_arguments_for(schema, help_message_presenter, presenter):
 
 def parse_arguments_for(schema, help_message_presenter, presenter):
     parser = ParseArgumentsUseCase(schema, sys.argv[1:], StringsArgumentMarshalerFactory(), help_message_presenter)
-    presenter.present(parser.get_value_of(('a', 'argument')))
+    presenter.present(parser.get_value_of(('s', 'string')))
+    if parser.has('a'):
+        presenter.present(parser.get_value_of(('a', 'string-array')))
 
 
 def handle_argument_error(e, schema, help_message_presenter):
