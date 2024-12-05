@@ -1,10 +1,13 @@
 import textwrap
 
+MESSAGE_CHARACTER_WIDTH = 72
+INDENT_SPACES = 2
+
 
 class PresentHelpMessageUseCase:
     def __init__(self, program_filename, description, presenter):
         self._program_filename = program_filename
-        self._description = textwrap.fill(description, 72)
+        self._description = textwrap.fill(description, MESSAGE_CHARACTER_WIDTH)
         self._presenter = presenter
         self._help_message = ""
 
@@ -19,7 +22,7 @@ class PresentHelpMessageUseCase:
         self._add_optional_arguments_from(schema)
 
     def _add_usage_line_with_required(self, schema):
-        self._help_message += textwrap.fill(f"usage: {self._program_filename} [-h]", 72)
+        self._help_message += textwrap.fill(f"usage: {self._program_filename} [-h]", MESSAGE_CHARACTER_WIDTH)
         for element in schema:
             if element.is_required:
                 self._help_message += f" -{element.name}{self._add_flag_value_for(element)}"
@@ -64,7 +67,7 @@ class PresentHelpMessageUseCase:
 
     @staticmethod
     def _spacer(arg_names, max_arg_names_length):
-        return " " * abs((max_arg_names_length + 2) - len(arg_names))
+        return " " * abs((max_arg_names_length + INDENT_SPACES) - len(arg_names))
 
     def _add_arg_help_messages(self, schema, max_arg_names_length):
         for element in schema:
@@ -74,7 +77,7 @@ class PresentHelpMessageUseCase:
 
     def _add_arg_help_message_for(self, args_names, element, max_arg_names_length):
         self._help_message += textwrap.fill(
-            f"{args_names}{self._spacer(args_names, max_arg_names_length)}{element.description}", 72,
+            f"{args_names}{self._spacer(args_names, max_arg_names_length)}{element.description}", MESSAGE_CHARACTER_WIDTH,
             subsequent_indent=self._spacer('', max_arg_names_length)) + '\n'
 
     @staticmethod

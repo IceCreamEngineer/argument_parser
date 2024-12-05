@@ -2,13 +2,13 @@ from entities.argument_error import ArgumentError, ArgumentErrorCode
 
 
 class ParseArgumentsUseCase:
-    def __init__(self, schema, arguments, argument_marshaler_factory, present_help_message_use_case):
+    def __init__(self, schema, arguments, argument_marshaler_factory, help_message_presenter):
         self._argument_marshaler_factory = argument_marshaler_factory
-        self._present_help_message_use_case = present_help_message_use_case
-        self._initialize_members()
+        self._help_message_presenter = help_message_presenter
+        self._initialize_collection_members()
         self._try_to_parse(schema, arguments)
 
-    def _initialize_members(self):
+    def _initialize_collection_members(self):
         self._marshalers = {}
         self._arguments_found = set()
         self._current_argument = None
@@ -17,7 +17,7 @@ class ParseArgumentsUseCase:
         try:
             self._parse(schema, arguments)
         except PresentHelp:
-            self._present_help_message_use_case.present_help_message(schema)
+            self._help_message_presenter.present_help_message(schema)
             return
 
     def _parse(self, schema, arguments):
@@ -94,7 +94,8 @@ class ParseArgumentsUseCase:
         self._check_for_expected(argument_character, matching_element_names)
         return matching_element_names
 
-    def _check_for_expected(self, argument_character, matching_element_names):
+    @staticmethod
+    def _check_for_expected(argument_character, matching_element_names):
         if argument_character == 'h' or argument_character == 'help':
             raise PresentHelp
         if not matching_element_names:

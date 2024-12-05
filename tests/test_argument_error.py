@@ -3,7 +3,7 @@ import unittest
 from entities.argument_error import ArgumentError, ArgumentErrorCode
 
 
-class MyTestCase(unittest.TestCase):
+class ArgumentErrorTests(unittest.TestCase):
     def test_unexpected_message(self):
         e = ArgumentError(ArgumentErrorCode.UNEXPECTED_ARGUMENT, 'x')
         self.assertEqual("Argument -x unexpected.", e.error_message())

@@ -9,7 +9,58 @@ from use_cases.present_help_message import PresentHelpMessageUseCase
 
 class PresentHelpMessageUseCaseTests(unittest.TestCase):
     def setUp(self):
+        self.am_factory = NoArgumentMarshalerFactory()
         self.presenter = PresenterSpy()
+        self.present_help_message_use_case = PresentHelpMessageUseCase('client.py', 'My client', self.presenter)
+
+    def test_present_help(self):
+        ParseArgumentsUseCase([], ['--help'], self.am_factory, self.present_help_message_use_case)
+        self.assertEqual(""
+            "usage: client.py [-h]\n"
+            "\n"
+            "My client\n"
+            "\n"
+            "optional arguments:\n"
+            "  -h, --help  show this help message and exit\n", self.presenter.get_presented())
+
+    def test_present_help_with_schema(self):
+        ParseArgumentsUseCase([ArgumentSchemaElement('a', '', description='My arg', is_required=False)],
+                              ['-h'], self.am_factory, self.present_help_message_use_case)
+        self.assertEqual(""
+            "usage: client.py [-h]\n"
+            "\n"
+            "My client\n"
+            "\n"
+            "optional arguments:\n"
+            "  -h, --help  show this help message and exit\n"
+            "  -a          My arg\n", self.presenter.get_presented())
+
+    def test_present_help_with_schema_and_long_name(self):
+        ParseArgumentsUseCase([ArgumentSchemaElement('a', '', long_name='arg', description='My arg', is_required=False)],
+                              ['-h'], self.am_factory, self.present_help_message_use_case)
+        self.assertEqual(""
+            "usage: client.py [-h]\n"
+            "\n"
+            "My client\n"
+            "\n"
+            "optional arguments:\n"
+            "  -h, --help  show this help message and exit\n"
+            "  -a, --arg   My arg\n", self.presenter.get_presented())
+
+    def test_present_help_for_required_args(self):
+        ParseArgumentsUseCase(
+            [ArgumentSchemaElement('a', '', long_name='arg', description='My arg', is_required=True),
+                    ArgumentSchemaElement('b', '', long_name='other_arg', description='My other arg', is_required=True)],
+            ['-h'], self.am_factory, self.present_help_message_use_case)
+        self.assertEqual(""
+             "usage: client.py [-h] -a -b\n"
+             "\n"
+             "My client\n"
+             "\n"
+             "optional arguments:\n"
+             "  -h, --help       show this help message and exit\n"
+             "  -a, --arg        My arg\n"
+             "  -b, --other_arg  My other arg\n", self.presenter.get_presented())
 
     def test_wrapped_long_description(self):
         use_case = PresentHelpMessageUseCase('client.py', ""
