@@ -1,6 +1,6 @@
 import sys
 
-from adapters.PrinterPresenter import PrinterPresenter
+from adapters.printer_presenter import PrinterPresenter
 from adapters.strings_argument_marshaler_factory import StringsArgumentMarshalerFactory
 from entities.argument_error import ArgumentError
 from entities.argument_schema import ArgumentSchemaElement
