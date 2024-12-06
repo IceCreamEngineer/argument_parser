@@ -33,6 +33,19 @@ Perform the following to run all corresponding tests:
 cd argument_parser
 python3 -m unittest tests/*.py
 ```
+## Module Integration
+For now, to integrate the module you will need to update the ```import``` </br>
+statements of most files to include the path of where you store the </br>
+package. For example, if you place the ```argument_parser``` package at</br>
+the root of your project, you'll need to adjust the ```import``` </br>
+statements like this:
+```python
+from argument_parser.ports.argument_marshaler import ArgumentMarshaler
+```
+instead of:
+```python
+from ports.argument_marshaler import ArgumentMarshaler
+```
 ## Acknowledgments
 * [Robert C. Martin](https://en.wikipedia.org/wiki/Robert_C._Martin)
 * [Robert Frost's "The Road Not Taken"](https://www.poetryfoundation.org/poems/44272/the-road-not-taken)
